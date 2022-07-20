@@ -1,4 +1,4 @@
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, Subject } from 'rxjs';
 
 const observer: Observer<any> = {
     next: valor => console.log('siguiente  [next]: ', valor),
