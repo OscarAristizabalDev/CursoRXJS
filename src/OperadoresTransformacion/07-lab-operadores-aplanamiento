@@ -1,0 +1,56 @@
+import { fromEvent, of } from 'rxjs';
+import { ajax, AjaxResponse } from 'rxjs/ajax';
+import { exhaustMap, map, take, tap, mergeMap, catchError, switchMap } from 'rxjs/operators';
+
+// Helper
+const realizarPeticionHttpLogin = (userPass) => 
+    ajax.post('https://reqres.in/api/login?delay=1',userPass)
+    .pipe(
+         map<AjaxResponse<any>, string>(response => response.response.token),
+         catchError(err => of('xxx')) // en caso de haber un error en la autenticación, se regresa XXX indicando que es un token no valido
+    )
+
+
+// Creando un formulario
+const form = document.createElement('form');
+const inputEmail = document.createElement('input');
+const inputPass = document.createElement('input');
+const submitBtn = document.createElement('button');
+
+// configuraciones
+inputEmail.type = 'email';
+inputEmail.placeholder = 'email';
+inputEmail.value = 'eve.holt@reqres.in';
+
+inputPass.type = 'password';
+inputPass.placeholder = 'password';
+inputPass.value = 'cityslicka';
+
+submitBtn.innerHTML = 'Ingresar';
+
+form.append(inputEmail, inputPass, submitBtn);
+document.querySelector('body').append(form);
+
+// Streams
+const submitForm$ = fromEvent(form, 'submit').pipe(
+    tap(event => event.preventDefault()), // se evita el evento de cargar la pagina en el submit
+    map(event => ({
+        email: event.target[0].value,
+        password: event.target[1].value
+    })), // Del objeto event solo obtenemos el email y el password, se realiza mediante destructuración
+    // mergeMap(userPass => realizarPeticionHttpLogin(userPass)) 
+    // el mergeMap recibe el email y password que luego son
+    // enviandos al metodo realizarPeticionHttpLogin, con mergeMap todas las peticiones se realizan cuantas veces se de click en Ingresar
+    // switchMap(userPass => realizarPeticionHttpLogin(userPass)) 
+    // el switchMap recibe el email y password que luego son
+    // enviandos al metodo realizarPeticionHttpLogin, con switchMap solo va a realizar la ultima petición, es decir, si se da click varias veces en ingresar, anula las anteriores peticiones
+    // http y solo ejecuta la última
+    exhaustMap(userPass => realizarPeticionHttpLogin(userPass)) 
+    // el exhaustMap recibe el email y password que luego son
+    // enviandos al metodo realizarPeticionHttpLogin, con exhaustMap solo va a realizar una unica petición http, va a realizar la siguiente petición siempre y cuando la anterior ya haya finalizado
+    // es decir, la ultima subscripción que realiza la petición se complete
+);
+
+submitForm$.subscribe(token =>{
+    console.log(token)
+});
