@@ -17,7 +17,7 @@ import { take, map } from 'rxjs/operators';
     // No tocar la creación del observable
     // ============================================
 
-    const subject$ = new Subject();
+    const subject$ = new Subject(); // genera un observable que permite que emitir los mismo valores en las subscripciones
     reloj$.subscribe(subject$);
 
     // Estos dos observables deben de emitir exactamente los mismos valores
